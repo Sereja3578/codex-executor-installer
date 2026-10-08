@@ -15,7 +15,9 @@ and its embedded payload hash matches the intended private source revision.
 
 For every verified change to either repository, update the relevant Git
 repository and rebuild this sole artifact when runtime or installer behavior
-changes. Do not blindly stage unrelated files. Never push a build or source to
+changes. Record the embedded source revision and local archive hash in
+`BUILD_STATUS.md` after each rebuild. Do not blindly stage unrelated files.
+Never push a build or source to
 a public remote before confirming its payload exposure and reviewing the exact
 staged diff. Never claim both repositories are synchronized without verifying
 their remotes, commits, and the release manifest.
