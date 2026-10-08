@@ -23,7 +23,7 @@ contents_dir="$app_dir/Contents"
 payload_dir="$contents_dir/Resources/Executor"
 mkdir -p "$contents_dir/MacOS" "$payload_dir/install" "$payload_dir/ui"
 
-for name in server.py run_engine.py run_worker.py observer_engine.py observer_worker.py runtime_environment.py; do
+for name in server.py codex_cli.py run_engine.py run_worker.py observer_engine.py observer_worker.py runtime_environment.py; do
   ditto --norsrc "$source_dir/$name" "$payload_dir/$name"
 done
 for name in launcher.py portable.py; do
