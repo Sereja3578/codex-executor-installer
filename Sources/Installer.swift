@@ -40,11 +40,24 @@ private func pythonPath() -> String? {
 }
 
 private func codexPath() -> String? {
-    firstExecutable(["/opt/homebrew/bin/codex", "/usr/local/bin/codex", "/Applications/ChatGPT.app/Contents/Resources/codex"])
+    firstExecutable(["/opt/homebrew/bin/codex", "/usr/local/bin/codex",
+                     "/Applications/ChatGPT.app/Contents/Resources/codex-cli/bin/codex",
+                     "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"])
 }
 
 private func tunnelClientPath() -> String? {
     firstExecutable(["/opt/homebrew/bin/tunnel-client", "/usr/local/bin/tunnel-client"])
+}
+
+private func tunnelClientSupported() -> Bool {
+    guard let path = tunnelClientPath() else { return false }
+    let result = command(path, ["--version"])
+    guard result.code == 0 else { return false }
+    let pattern = #"\b(\d+)\.(\d+)\.(\d+)\b"#
+    guard let match = result.output.range(of: pattern, options: .regularExpression) else { return false }
+    let components = result.output[match].split(separator: ".").compactMap { Int($0) }
+    guard components.count == 3 else { return false }
+    return components.lexicographicallyPrecedes([0, 0, 12]) == false
 }
 
 private func openInBrowser(_ address: String) {
@@ -206,7 +219,7 @@ struct InstallerView: View {
             let brew = brewPath() != nil
             let python = pythonPath() != nil
             let codex = codexPath()
-            let tunnel = tunnelClientPath() != nil
+            let tunnel = tunnelClientSupported()
             let signedIn = codex.map { command($0, ["login", "status"]).code == 0 } ?? false
             DispatchQueue.main.async {
                 hasBrew = brew
@@ -253,7 +266,7 @@ struct InstallerView: View {
         lines.append("if [ ! -x \"$BREW\" ]; then BREW=/usr/local/bin/brew; fi")
         lines.append("if [ ! -x \"$BREW\" ]; then echo 'Homebrew installation failed'; exit 1; fi")
         if needsPython { lines.append("\"$BREW\" install python@3.13") }
-        if needsTunnel { lines.append("\"$BREW\" install openai/tools/tunnel-client") }
+        if needsTunnel { lines.append("\"$BREW\" upgrade openai/tools/tunnel-client || \"$BREW\" install openai/tools/tunnel-client") }
         if needsCodex { lines.append("\"$BREW\" install --cask codex") }
         status = launchTerminalTask(lines)
             ? "Команды открыты в Terminal. После их завершения нажмите «Проверить Mac»."
